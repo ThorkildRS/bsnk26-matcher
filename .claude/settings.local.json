@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install @vitejs/plugin-react-swc --save-dev)",
       "Bash(npm run build)",
-      "Bash(npm uninstall @vitejs/plugin-react)"
+      "Bash(npm uninstall @vitejs/plugin-react)",
+      "WebFetch(domain:thorkildrs.github.io)"
     ]
   }
 }

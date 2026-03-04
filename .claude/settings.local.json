@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install @vitejs/plugin-react-swc --save-dev)",
+      "Bash(npm run build)"
+    ]
+  }
+}

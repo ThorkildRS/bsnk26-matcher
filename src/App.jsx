@@ -203,7 +203,7 @@ function ResultsView({ liked, total, onReset }) {
     liked.length <= 8 ? "Solid program for deg!" : "Du vil ha alt!";
 
   const SHARE_URL = "https://bsnk.no";
-  const shareText = `Jeg matchet med ${liked.length} av ${total} foredrag p\u00e5 #BSNK26! Finn dine favoritter:`;
+  const shareText = `Jeg skal delta på #BSNK26! 🎯 Sjekk ut programmet og finn dine favorittforedrag:\n${SHARE_URL}`;
 
   const generateImage = () => {
     const W = 1080, rowH = 72, padX = 60, topH = 320;
@@ -285,22 +285,32 @@ function ResultsView({ liked, total, onReset }) {
       // Copy image to clipboard, then open platform post creator
       let copied = false;
       try {
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+            "text/plain": new Blob([shareText], { type: "text/plain" }),
+          }),
+        ]);
         copied = true;
       } catch {
-        // Clipboard API not supported, fall back to download
-        downloadImage();
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+          copied = true;
+        } catch {
+          downloadImage();
+        }
       }
 
+      const encoded = encodeURIComponent(shareText);
       const urls = {
-        linkedin: "https://www.linkedin.com/feed/?shareActive=true",
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}&quote=${encodeURIComponent(shareText)}`,
-        x: `https://x.com/intent/tweet?text=${encodeURIComponent(shareText + " " + SHARE_URL)}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SHARE_URL)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}&quote=${encoded}`,
+        x: `https://x.com/intent/tweet?text=${encoded}`,
       };
 
       if (copied) {
         const names = { linkedin: "LinkedIn", facebook: "Facebook", x: "X" };
-        setShareToast(`Bildet er kopiert! Lim det inn i ${names[platform]}-innlegget ditt (Ctrl+V)`);
+        setShareToast(`Bilde og tekst er kopiert! Lim inn i ${names[platform]}-innlegget ditt (Ctrl+V)`);
         setTimeout(() => setShareToast(null), 6000);
       }
 

@@ -274,33 +274,37 @@ function ResultsView({ liked, total, onReset }) {
     }, "image/png");
   };
 
+  const [shareToast, setShareToast] = useState(null);
+
   const handleSharePlatform = async (platform) => {
     setSharing(true);
     try {
-      // On mobile with Web Share API, share image directly
-      if (navigator.share && navigator.canShare) {
-        const canvas = generateImage();
-        const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
-        const file = new File([blob], "mine-bsnk26-favoritter.png", { type: "image/png" });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: "Mine BSNK26-favoritter", text: shareText, url: SHARE_URL, files: [file] });
-          setSharing(false);
-          return;
-        }
+      const canvas = generateImage();
+      const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+
+      // Copy image to clipboard, then open platform post creator
+      let copied = false;
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        copied = true;
+      } catch {
+        // Clipboard API not supported, fall back to download
+        downloadImage();
       }
 
-      // Desktop: download image, then open platform share URL
-      downloadImage();
-
-      const encodedUrl = encodeURIComponent(SHARE_URL);
-      const encodedText = encodeURIComponent(shareText);
       const urls = {
-        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
-        x: `https://x.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+        linkedin: "https://www.linkedin.com/feed/?shareActive=true",
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}&quote=${encodeURIComponent(shareText)}`,
+        x: `https://x.com/intent/tweet?text=${encodeURIComponent(shareText + " " + SHARE_URL)}`,
       };
 
-      setTimeout(() => window.open(urls[platform], "_blank", "noopener,noreferrer"), 300);
+      if (copied) {
+        const names = { linkedin: "LinkedIn", facebook: "Facebook", x: "X" };
+        setShareToast(`Bildet er kopiert! Lim det inn i ${names[platform]}-innlegget ditt (Ctrl+V)`);
+        setTimeout(() => setShareToast(null), 6000);
+      }
+
+      setTimeout(() => window.open(urls[platform], "_blank", "noopener,noreferrer"), 200);
     } catch (e) {
       console.error(e);
     }
@@ -364,6 +368,14 @@ function ResultsView({ liked, total, onReset }) {
               </div>
             ))}
           </div>
+        )}
+
+        {shareToast && (
+          <div style={{
+            background: BRAND.dark, color: "#fff", padding: "12px 20px", borderRadius: 12,
+            fontSize: 14, fontWeight: 500, textAlign: "center", marginBottom: 8,
+            animation: "fadeIn 0.3s ease",
+          }}>{shareToast}</div>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

@@ -191,134 +191,23 @@ function SwipeCard({ talk, onSwipe, style, isTop }) {
   );
 }
 
-function ResultsView({ liked, total, onReset }) {
-  const pct = Math.round((liked.length / total) * 100);
+function ResultsView({ liked, onReset }) {
   const [show, setShow] = useState(false);
-  const [sharing, setSharing] = useState(false);
   useEffect(() => { setTimeout(() => setShow(true), 100); }, []);
-
-  const headline =
-    liked.length === 0 ? "Ingen match denne gangen?" :
-    liked.length <= 3 ? "Du vet hva du vil!" :
-    liked.length <= 8 ? "Solid program for deg!" : "Du vil ha alt!";
 
   const SHARE_URL = "https://bsnk.no";
   const shareText = `Jeg skal delta på #BSNK26! 🎯 Sjekk ut programmet og finn dine favorittforedrag:\n${SHARE_URL}`;
 
-  const generateImage = () => {
-    const W = 1080, rowH = 72, padX = 60, topH = 320;
-    const H = topH + liked.length * rowH + 100;
-    const canvas = document.createElement("canvas");
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, W, H);
 
-    const grad = ctx.createLinearGradient(0, 0, W, 0);
-    grad.addColorStop(0, BRAND.accentDark); grad.addColorStop(1, BRAND.accent);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, 6);
-
-    ctx.fillStyle = BRAND.dark;
-    ctx.font = "bold 42px 'DM Sans', sans-serif";
-    ctx.fillText("Mine BSNK26-favoritter", padX, 80);
-
-    ctx.fillStyle = BRAND.muted;
-    ctx.font = "400 26px 'DM Sans', sans-serif";
-    ctx.fillText(`${liked.length} av ${total} foredrag matchet`, padX, 124);
-
-    ctx.fillStyle = BRAND.accent;
-    ctx.font = "600 22px 'DM Sans', sans-serif";
-    ctx.fillText("15. april 2026 \u00B7 Clarion Hotel Oslo", padX, 168);
-
-    ctx.strokeStyle = BRAND.border; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(padX, 200); ctx.lineTo(W - padX, 200); ctx.stroke();
-
-    liked.forEach((talk, i) => {
-      const y = 230 + i * rowH;
-      if (i % 2 === 0) {
-        ctx.fillStyle = "#f8f9fb";
-        ctx.beginPath();
-        ctx.roundRect(padX - 16, y - 6, W - 2 * padX + 32, rowH - 8, 12);
-        ctx.fill();
-      }
-      ctx.fillStyle = BRAND.accent;
-      ctx.font = "600 20px 'DM Sans', sans-serif";
-      ctx.fillText(`kl. ${talk.time}`, padX, y + 26);
-      ctx.fillStyle = BRAND.dark;
-      ctx.font = "600 22px 'DM Sans', sans-serif";
-      const title = talk.title.length > 48 ? talk.title.slice(0, 48) + "\u2026" : talk.title;
-      ctx.fillText(title, padX + 110, y + 26);
-      ctx.fillStyle = BRAND.muted;
-      ctx.font = "400 18px 'DM Sans', sans-serif";
-      ctx.fillText(talk.speaker, padX + 110, y + 52);
-    });
-
-    ctx.fillStyle = BRAND.muted;
-    ctx.font = "400 20px 'DM Sans', sans-serif";
-    ctx.fillText("buildingsmart.no/konferansen \u00B7 #BSNK26", padX, H - 50);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, H - 6, W, 6);
-
-    return canvas;
-  };
-
-  const downloadImage = () => {
-    generateImage().toBlob((blob) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "mine-bsnk26-favoritter.png";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }, "image/png");
-  };
-
-  const [shareToast, setShareToast] = useState(null);
-
-  const handleSharePlatform = async (platform) => {
-    setSharing(true);
-    try {
-      const canvas = generateImage();
-      const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
-
-      // Copy image to clipboard, then open platform post creator
-      let copied = false;
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "image/png": blob,
-            "text/plain": new Blob([shareText], { type: "text/plain" }),
-          }),
-        ]);
-        copied = true;
-      } catch {
-        try {
-          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-          copied = true;
-        } catch {
-          downloadImage();
-        }
-      }
-
-      const encoded = encodeURIComponent(shareText);
-      const urls = {
-        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SHARE_URL)}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}&quote=${encoded}`,
-        x: `https://x.com/intent/tweet?text=${encoded}`,
-      };
-
-      if (copied) {
-        const names = { linkedin: "LinkedIn", facebook: "Facebook", x: "X" };
-        setShareToast(`Bilde og tekst er kopiert! Lim inn i ${names[platform]}-innlegget ditt (Ctrl+V)`);
-        setTimeout(() => setShareToast(null), 6000);
-      }
-
-      setTimeout(() => window.open(urls[platform], "_blank", "noopener,noreferrer"), 200);
-    } catch (e) {
-      console.error(e);
-    }
-    setSharing(false);
+  const handleSharePlatform = (platform) => {
+    const encoded = encodeURIComponent(shareText);
+    const urls = {
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SHARE_URL)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}&quote=${encoded}`,
+      x: `https://x.com/intent/tweet?text=${encoded}`,
+    };
+    window.open(urls[platform], "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -334,17 +223,7 @@ function ResultsView({ liked, total, onReset }) {
       }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <img src={BRAND.logo} alt="BSNK" style={{ height: 56, marginBottom: 16, display: "inline-block" }} />
-          <h1 style={{ fontSize: 30, fontWeight: 700, color: BRAND.dark, margin: 0, marginBottom: 6 }}>{headline}</h1>
-          <p style={{ fontSize: 15, color: BRAND.muted, margin: 0 }}>
-            Du matchet med <strong style={{ color: BRAND.accentDark }}>{liked.length}</strong> av {total} foredrag
-          </p>
-          <div style={{ width: "100%", height: 6, borderRadius: 3, background: "#f1f5f9", marginTop: 20, overflow: "hidden" }}>
-            <div style={{
-              width: show ? `${pct}%` : "0%", height: "100%", borderRadius: 3,
-              background: `linear-gradient(90deg, ${BRAND.accentDark}, ${BRAND.accent})`,
-              transition: "width 1s cubic-bezier(.4,0,.2,1) 0.4s",
-            }} />
-          </div>
+          <h1 style={{ fontSize: 30, fontWeight: 700, color: BRAND.dark, margin: 0 }}>Dine favoritter</h1>
         </div>
 
         {liked.length > 0 && (
@@ -380,13 +259,6 @@ function ResultsView({ liked, total, onReset }) {
           </div>
         )}
 
-        {shareToast && (
-          <div style={{
-            background: BRAND.dark, color: "#fff", padding: "12px 20px", borderRadius: 12,
-            fontSize: 14, fontWeight: 500, textAlign: "center", marginBottom: 8,
-            animation: "fadeIn 0.3s ease",
-          }}>{shareToast}</div>
-        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {liked.length > 0 && (<>
@@ -397,13 +269,13 @@ function ResultsView({ liked, total, onReset }) {
                 { key: "facebook", label: "Facebook", color: "#1877F2", icon: "f" },
                 { key: "x", label: "X", color: "#000000", icon: "X" },
               ].map(p => (
-                <button key={p.key} onClick={() => handleSharePlatform(p.key)} disabled={sharing} style={{
+                <button key={p.key} onClick={() => handleSharePlatform(p.key)} style={{
                   flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   padding: "12px 8px", borderRadius: 12,
                   background: "#fff", border: `1.5px solid ${p.color}22`,
                   color: p.color, fontSize: 13, fontWeight: 700,
-                  cursor: sharing ? "wait" : "pointer", transition: "all 0.2s",
-                  opacity: sharing ? 0.6 : 1, fontFamily: "'DM Sans', sans-serif",
+                  cursor: "pointer", transition: "all 0.2s",
+                  fontFamily: "'DM Sans', sans-serif",
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${p.color}08`; e.currentTarget.style.borderColor = `${p.color}44`; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = `${p.color}22`; }}
@@ -421,7 +293,7 @@ function ResultsView({ liked, total, onReset }) {
             }}
             onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.boxShadow = `0 12px 32px ${BRAND.accent}44`; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = `0 8px 24px ${BRAND.accent}33`; }}
-          >Sikre deg plass — Kjøp billett</a>
+          >Sikre deg plass til årets konferanse</a>
           <button onClick={onReset} style={{
             background: "none", border: `1px solid ${BRAND.border}`, borderRadius: 14,
             padding: "12px 24px", color: BRAND.muted, fontSize: 14, fontWeight: 500,
@@ -505,7 +377,7 @@ export default function App() {
   }
 
   if (currentIndex >= TALKS.length) {
-    return <ResultsView liked={liked} total={TALKS.length} onReset={handleReset} />;
+    return <ResultsView liked={liked} onReset={handleReset} />;
   }
 
   return (

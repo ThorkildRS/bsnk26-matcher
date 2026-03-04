@@ -262,7 +262,7 @@ function ResultsView({ liked, onReset }) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {liked.length > 0 && (<>
-            <div style={{ fontSize: 13, fontWeight: 600, color: BRAND.muted, textAlign: "center", marginBottom: -2 }}>Del dine favoritter</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: BRAND.muted, textAlign: "center", marginBottom: -2 }}>Del konferansen</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               {[
                 { key: "linkedin", label: "LinkedIn", color: "#0A66C2", icon: "in" },
